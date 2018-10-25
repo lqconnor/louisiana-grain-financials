@@ -10,7 +10,7 @@ pckgs <- c("tidyverse", "stargazer", "rnassqs")
 lapply(pckgs, library, character.only = TRUE)
 
 
-income <- read_csv("../../../Data/FarmIncome_WealthStatisticsData_August2018.csv") %>%
+income <- read_csv("../../Data/FarmIncome_WealthStatisticsData_August2018.csv") %>%
   filter(str_detect(VariableDescriptionTotal, "current"))
 
 
