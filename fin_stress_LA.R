@@ -11,7 +11,11 @@ lapply(pckgs, library, character.only = TRUE)
 
 
 income <- read_csv("../../Data/FarmIncome_WealthStatisticsData_August2018.csv") %>%
-  filter(str_detect(VariableDescriptionTotal, "current"))
+  filter(str_detect(VariableDescriptionTotal, "Net cash income"), State == "LA", Year >= 2010)
+
+cash <- read_csv("../../Data/FarmIncome_WealthStatisticsData_August2018.csv") %>%
+  filter(str_detect(VariableDescriptionTotal, "receipts"), Year >= 2010)
+
 
 
 # Get and clean NASS API data -------------------------------------------------------------
