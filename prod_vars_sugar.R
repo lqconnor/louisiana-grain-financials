@@ -8,8 +8,8 @@ Sys.setenv(NASSQS_TOKEN = readLines(".secret"))
 pckgs <- c("tidyverse", "stargazer", "rnassqs")
 lapply(pckgs, library, character.only = TRUE)
 
-corn_f <- read_csv("../../Data/zcz19_price-history-10-29-2018_1.csv") %>%
-  filter(!str_detect(Time, "^8/"), !str_detect(Time, "^7/")) %>%
+corn_f <- read_csv("../../Data/zcu19_price-history-11-07-2018.csv") %>%
+  filter(!str_detect(Time, "^8/"), !str_detect(Time, "^7/"), !str_detect(Time, "^11/")) %>%
   mutate(avg_prc = mean(Last))
 
 # Get and clean NASS API data -------------------------------------------------------------
@@ -22,11 +22,12 @@ params = list(source_desc = "SURVEY",
               reference_period_desc = "YEAR")
 
 # Commodities and values of interest
-commodities <- c("WHEAT", "CORN", "SOYBEANS", "SORGHUM", "COTTON", "RICE")           # Commodities we want to keep
-vars <- c("YIELD", "PLANTED")                                                        # Specifies production variables we want to keep
+commodities <- c("WHEAT", "CORN", "SOYBEANS", "SORGHUM", "COTTON", "RICE", "SUGARCANE")           # Commodities we want to keep
+vars <- c("YIELD", "PLANTED", "HARVESTED")                                                        # Specifies production variables we want to keep
 nass_cleaner <- c("NET", "SWEET", "FOLLOWING", "IRRIGATED", "PIMA", "FORAGE",        # Remove commodity breakdowns we don't want
                   "EXCL", "SPRING", "WINTER", "PLANTED ACRE", "TREATED",
-                  "BIOTECH", "PEST", "UPLAND", "LONG", "MEDIUM")
+                  "BIOTECH", "PEST", "UPLAND", "LONG", "MEDIUM", 
+                  "SUGARCANE, SUGAR -", "SUGARCANE, SEED -")
 
 # Feed parameters to rnassqs package
 yield_c <- nassqs(params = params) %>%
@@ -35,7 +36,11 @@ yield_c <- nassqs(params = params) %>%
   filter(!(str_detect(short_desc, paste(nass_cleaner, collapse = '|')))) %>%
   filter(!(str_detect(util_practice_desc, "SILAGE"))) %>%
   select(state_name, state_alpha, state_fips_code, county_code, agg_level_desc, short_desc, Value, year) %>%  # keep variables of interest
-  mutate(Value = as.numeric(gsub(",","", Value, fixed = TRUE)))
+  mutate(Value = as.numeric(gsub(",","", Value, fixed = TRUE))) %>%
+  mutate(sugar = as.numeric(str_detect(short_desc, "HARVESTED")))
+yield_c$sugar[str_detect(yield_c$short_desc, "SUGARCANE")] <- 0
+yield_c <- filter(yield_c, sugar == 0) %>%
+  select(-sugar)
 
 # SHORT_DESC: Clean ---------------------------------------------------------------------------
 # Use regex to make all SHORT_DESC observations consistent to convert to tidy form
@@ -45,7 +50,9 @@ yield_c <- mutate(yield_c, short_desc = sub(",[[:blank:]][A-Z]+", "", short_desc
                   short_desc = gsub(" -", "-", short_desc),
                   short_desc = gsub("YIELD", "YIELD ", short_desc),
                   short_desc = gsub("////[[:blank:]].*", "", short_desc),
-                  short_desc = gsub(" IN.*", "", short_desc))
+                  short_desc = gsub(" IN.*", "", short_desc),
+                  short_desc = gsub(" & SEED", "", short_desc),
+                  short_desc = gsub("HARVESTED", "PLANTED", short_desc))
 
 # Convert to tidy form ------------------------------------------------------------------------
 yield_c <- separate(yield_c, short_desc, into = c("commodity", "description"), sep = "-") %>%
@@ -58,4 +65,4 @@ yield_c <- separate(yield_c, short_desc, into = c("commodity", "description"), s
   select(-plnt_acr) %>%
   spread(key = commodity, value = yield)
 
-write_csv(yield_c, str_c("output/yield_",svy_yr,".csv"))
+#write_csv(yield_c, str_c("output/yield_sugar",svy_yr,".csv"))
