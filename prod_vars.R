@@ -5,8 +5,14 @@ getwd()
 
 Sys.setenv(NASSQS_TOKEN = readLines(".secret"))
 
-pckgs <- c("tidyverse", "stargazer", "rnassqs")
-lapply(pckgs, library, character.only = TRUE)
+#Check if packages installed, install missing packages and load all installed packages
+pckgs <- c("tidyverse", "rnassqs", "stargazer")
+lapply(pckgs, FUN = function(x) {
+  if (!require(x, character.only = TRUE)) {
+    install.packages(x, dependencies = TRUE)
+    library(x, character.only = TRUE)
+  }
+})
 
 corn_f <- read_csv("../../Data/zcz19_price-history-10-29-2018_1.csv") %>%
   filter(!str_detect(Time, "^8/"), !str_detect(Time, "^7/")) %>%
