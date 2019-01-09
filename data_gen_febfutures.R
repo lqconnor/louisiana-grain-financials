@@ -13,7 +13,8 @@ memory.limit()
 
 memory.limit(size=300000)
 
-setwd("C:/Users/connor.189/Documents/Data")
+setwd("C:/Research/Crop Insurance and yield variance/Data")
+#setwd("C:/Users/connor.189/Documents/Data")
 #setwd("C:/Users/Lawson/Documents/Data")
 
 
@@ -282,7 +283,8 @@ NASS2 <-  left_join(NASS2, ppt, by = c("statefp" = "STATEFP",
                         "year" = "year"))
 
 # Join Temperature data -----------------------------------------------------------------------
-dtemp <- read_csv("Weather Scripts/Data/dt_mean.csv")
+#dtemp <- read_csv("Weather Scripts/Data/dt_mean.csv")
+dtemp <- read_csv("dt_mean.csv")
 dtemp$month <- as.numeric(gsub(",","", dtemp$month, fixed = TRUE))
 
 # Calculate Growing Degree Days (GDD)
@@ -290,12 +292,12 @@ dtemp$month <- as.numeric(gsub(",","", dtemp$month, fixed = TRUE))
 c <- 1
 dtemp$grow <- 0
 for(y in 1989:2016){
-  dtemp$grow[dtemp$month >= 4 & dtemp$month < 7 & dtemp$year == y] <- c
+  dtemp$grow[dtemp$month >= 4 & dtemp$month < 7 & dtemp$year == y] <- c       #create unique factor number for the growing season in each year so that we can sum by group next
   c <- c + 1
 }
 
 # Calculate growing degree day
-temp <- mutate(dtemp, gdd = dt_mean - 10)
+temp <- mutate(dtemp, gdd = dt_mean - 10)    # Calculation for number of degrees above 10 degrees celcius in a day.
 
 # sum the total growing degree days
 temp <- group_by(temp, STATEFP, COUNTYFP, grow) %>%
